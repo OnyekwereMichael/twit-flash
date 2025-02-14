@@ -9,7 +9,7 @@ import Cover from "../../../../../../../public/assets/side-img.svg";
 
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
-import { FaLink } from "react-icons/fa";
+import { FaLink, FaPlus } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import Link from "next/link";
 import Image from "next/image";
