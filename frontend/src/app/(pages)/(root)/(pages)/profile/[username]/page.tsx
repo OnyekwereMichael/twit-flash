@@ -1,5 +1,5 @@
 "use client";
-import { ChangeEvent, DragEvent, useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 // import Posts from "../../components/common/Posts";
 // import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 // import EditProfileModal from "./EditProfileModal";
@@ -9,12 +9,12 @@ import Cover from "../../../../../../../public/assets/side-img.svg";
 
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
-import { FaLink, FaPlus } from "react-icons/fa";
+import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import Link from "next/link";
 import Image from "next/image";
 import {
-  getAuthUser,
+  GetAuthUser,
   useFollowUser,
   useGetProfile,
   useUpdateProfileImg,
@@ -23,7 +23,6 @@ import { formatMemberSinceDate } from "@/app/lib/date";
 import Loader from "../../../(component)/loader/page";
 import Profilepost from "../../../(component)/postcard/profilePost/page";
 import Profilelikes from "../../../(component)/postcard/profileLikes/page";
-import { useParams } from "next/navigation";
 import toast from "react-hot-toast";
 import cloudinaryLoader from "@/app/lib/cloudinary";
 
@@ -43,7 +42,7 @@ const ProfilePage: React.FC = () => {
     isError: isErrorFollowing,
     error: iserrorFollowing,
   } = useFollowUser();
-  const { data: authUser } = getAuthUser();
+  const { data: authUser } = GetAuthUser();
   const { mutate: updateProfile, isPending: isUpdating } =
     useUpdateProfileImg();
   if (isErrorFollowing) {
@@ -150,8 +149,8 @@ const ProfilePage: React.FC = () => {
                 )}
 
                 {/* PROFILE IMAGE */}
-                <div className="avatar absolute -bottom-16 left-4">
-                  <div className=" rounded-full relative group/avatar">
+                <div className="avata absolute -bottom-16 left-4">
+                  <div className=" rounded-full relative group/avata">
                     <Image
                       src={profileImg || user?.profileImg || Profile}
                       loader={cloudinaryLoader}
@@ -171,7 +170,7 @@ const ProfilePage: React.FC = () => {
                           onChange={(e) => handleImgChange(e, "profile")}
                         />
                         <div
-                          className="absolute top-5 right-3 p-1 bg-primary rounded-full opacity-0 group-hover/avatar:opacity-100 cursor-pointer"
+                          className="absolute top-5 right-3 p-1 bg-primary rounded-full opacity-0 group-hover/avata:opacity-100 cursor-pointer"
                           onClick={() => profileImgRef.current?.click()}
                         >
                           <MdEdit className="w-4 h-4 text-white" />

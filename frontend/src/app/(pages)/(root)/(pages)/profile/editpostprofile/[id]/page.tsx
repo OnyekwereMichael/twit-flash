@@ -9,7 +9,7 @@ import { useParams, useRouter } from 'next/navigation';
 
 
 const EditPostProfile = () => {
-  const {id: postId} = useParams()
+    const { id: postId } = useParams() as { id: string };
     const { mutate: updatePost, isPending } = useUpdatePost();
     const router = useRouter()
 

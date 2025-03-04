@@ -1,22 +1,19 @@
 'use client'
 import Link from 'next/link'
-import Logo from '../../../../../../public/assets/logo.svg'
 import Logout  from '../../../../../../public/assets/logout.svg'
 import Profile from '../../../../../../public/assets/profilepic.svg'
-import { INavLink } from '@/app/types'
 import { sidebarLinks } from '@/app/constants'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { getAuthUser, useLogout } from '@/app/lib/query'
+import { GetAuthUser, useLogout } from '@/app/lib/query'
 import { useRouter } from 'next/navigation'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import cloudinaryLoader from '../../../../lib/cloudinary'
 
 const LeftSideBar = () => {
-  const queryClient = useQueryClient()
+  const pathname = usePathname()
   const router = useRouter()
   const { mutate: logout, isError, error, isSuccess, isPending } = useLogout()
-  const {data:authUser} = getAuthUser()
+  const {data:authUser} = GetAuthUser()
   console.log(authUser);
   
 
@@ -30,12 +27,12 @@ const LeftSideBar = () => {
     router.push('/signin')  // Redirects to the sign-in page
   }
 
-  const pathname = usePathname()
+  
 
   return (
     <div>
       <nav className="leftsidebar">
-        <div className="flex flex-col gap-11">
+        <div className="flex flex-col gap-10">
           <Link href="/" className="flex gap-3 items-center">
             <div>
               <h1 className="font-Bakbak text-transparent text-[33px] font-semibold max-sm:text-[30px]">
@@ -44,7 +41,7 @@ const LeftSideBar = () => {
               </h1>
             </div>
           </Link>
-          <Link href={`/`} className="flex-center gap-3">
+          <Link href={`/`} className=" flex  items-center gap-3">
             <Image loader={cloudinaryLoader} src={authUser?.profileImg || Profile} alt="Profile_pic" className="w-14 h-14 rounded-full" width={14} height={14}/>
             <div className="flex flex-col">
               <p className="body-bold">{authUser?.fullname}</p>
@@ -52,15 +49,15 @@ const LeftSideBar = () => {
             </div>
           </Link>
 
-          <ul className="flex flex-col gap-6">
-            {sidebarLinks.map((link: INavLink) => {
+          <ul className="flex flex-col gap-5">
+            {sidebarLinks.map((link) => {
                const dynamicRoute = link.label === "Profile" && typeof link.route === 'function' ? link.route(authUser?.username) : link.route;
                const isActive = pathname === dynamicRoute;
               return (
                 <li className={`leftsidebar-link group ${isActive && 'bg-purple-500'}`} key={link.label}>
                   <Link href={typeof dynamicRoute === 'string' ? dynamicRoute : '#'} className="flex gap-4 items-center p-4">
                     <Image src={link.imgURL} alt="" className={`group-hover:invert-white ${isActive && 'invert-white'} w-6 h-6`} width={6} height={6}/>
-                    <p className="font-medium text-[15px]">{link.label}</p>
+                    <p className="font-medium text-[18px] font-Asul">{link.label}</p>
                   </Link>
                 </li>
               )
@@ -69,7 +66,7 @@ const LeftSideBar = () => {
         </div>
 
         {/* Logout button */}
-        <button className="shad-button_ghost" onClick={() => logout()}>
+        <button className="shad-button_ghost text-center" onClick={() => logout()}>
           <Image src={Logout} alt="" />
           <p className="sm:medium lg:base:medium font-medium text-[15px]">
             {isPending ? 'Logging out...' : 'Logout'}

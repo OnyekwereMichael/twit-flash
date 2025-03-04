@@ -1,12 +1,17 @@
 "use client"; // Ensures the component runs on the client side
 
-import { useState, useRef, ChangeEvent, DragEvent } from "react";
+import {  useRef, ChangeEvent, DragEvent } from "react";
 import Image from "next/image";
 import FileUpload from "../../../../../../../public/assets/file-upload.svg";
 
-const FileUploader: React.FC = () => {
+interface FileUploaderProps {
+  selectedImage: string | null;
+  setSelectedImage: (image: string | null) => void;
+}
+
+const FileUploader = ({ selectedImage, setSelectedImage }: FileUploaderProps) => {
   // State to store the uploaded image as a base64 string
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  // const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   // Ref to access the hidden file input
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -71,7 +76,7 @@ const FileUploader: React.FC = () => {
             <Image src={FileUpload} width={96} height={77} alt="File Upload" />
             <h3 className="base-medium mt-6 mb-2 text-light-2">Drag photo here</h3>
             <p className="text-light-4 mb-4 small-regular">SVG, PNG, JPG</p>
-            <button className="shad-button_dark_4" onClick={handleButtonClick}>
+            <button type="button" className="shad-button_dark_4" onClick={handleButtonClick}>
               <p>Select from computer</p>
             </button>
           </>

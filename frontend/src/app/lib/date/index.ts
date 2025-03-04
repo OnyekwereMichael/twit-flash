@@ -1,7 +1,4 @@
-// Utility function to calculate relative time
-export const getRelativeTime = (date: any) => {
-    // const [isComment, setIsComment] = useState(false);
-  
+export const getRelativeTime = (date: string) => { 
     const now = new Date();
     const createdAt = new Date(date);
     const diffInSeconds = Math.floor((now.getTime() - createdAt.getTime()) / 1000);
@@ -20,7 +17,7 @@ export const getRelativeTime = (date: any) => {
   };
 
 
-  export const formatMemberSinceDate = (createdAt:any) => {
+  export const formatMemberSinceDate = (createdAt:string) => {
     const date = new Date(createdAt);
     const months = [
       "January",
@@ -40,3 +37,11 @@ export const getRelativeTime = (date: any) => {
     const year = date.getFullYear();
     return `Joined ${month} ${year}`;
   };
+
+  export function formatMessageTime(date:string) {
+    return new Date(date).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }

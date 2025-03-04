@@ -1,16 +1,18 @@
 'use client'
-import { USERS_FOR_RIGHT_PANEL } from "@/app/constants/dummy";
 import RightPanelSkeleton from "./RightPanelSkeleton";
 import Link from "next/link";
 import Profile from '../../../../../../public/assets/profilepic.svg'
-import { profile } from "console";
 import Image from "next/image";
-import { FiUserPlus } from "react-icons/fi";
-import { MdPersonAdd } from "react-icons/md";
 import { HiUserAdd } from "react-icons/hi";
 import { useFollowUser, useGetSuggestedUser } from "@/app/lib/query";
 import cloudinaryLoader from "@/app/lib/cloudinary";
 
+interface RigthPanelUser {
+	_id: string;
+	fullname: string;
+	username: string;
+	profileImg: string;
+}
 const RightPanel = () => {
 	const {data:getSuggestedUser, isLoading, isError, error} = useGetSuggestedUser()
 	const {mutate:follow, isPending,  isError:isErrorFollowing, error:iserrorFollowing} = useFollowUser()
@@ -42,7 +44,7 @@ const RightPanel = () => {
 					)}
 					{/* User list */}
 					{!isLoading &&
-						getSuggestedUser?.map((user:any) => (
+						getSuggestedUser?.map((user:RigthPanelUser) => (
 							<Link
 								href={`/profile/${user.username}`}
 								className="flex items-center justify-between gap-4 p-3 rounded-lg transition"
@@ -51,11 +53,11 @@ const RightPanel = () => {
 								{/* User info */}
 								<div className="flex gap-3 items-center">
 									<div className="avatar">
-										<div className="rounded-full overflow-hidden">
+										<div className="rounded-full  w-12 h-12 overflow-hidden">
 											<Image
 												src={user.profileImg || Profile}
 												alt={`${user.fullname}'s profile`}
-												className="object-cover w-10 h-10 "
+												className="object-cover w-12 h-12 "
 												width={10}
 												height={10}
 												loader={cloudinaryLoader}

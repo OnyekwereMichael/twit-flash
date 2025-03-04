@@ -1,5 +1,4 @@
 'use client';
-import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser, FaTrash } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
 import Link from "next/link";
@@ -8,9 +7,17 @@ import Image from "next/image";
 import Profile from "../../../../../../public/assets/profilepic.svg";
 import cloudinaryLoader from "@/app/lib/cloudinary";
 
+interface Notification {
+    _id: string;
+    type: "follow" | "like";
+    sender: {
+        username: string;
+        profileImg: string;
+    };
+}
 const NotificationPage = () => {
     const { data: notificationData, isError, error, isLoading } = useGetNotification();
-    const { mutate: deleteNotification, isPending } = useDeleteAllNotification();
+    const { mutate: deleteNotification } = useDeleteAllNotification();
 
     if (isError) {
         console.error("Error fetching notifications:", error.message);
@@ -21,7 +28,7 @@ const NotificationPage = () => {
     };
 
     return (
-        <div className="w-[50vw] max-sm:w-full bg-dark-2 rounded-3xl border border-dark-4 p-5 lg:p-4 mt-4 text-gray-900">
+        <div className="w-[50vw] overflow-y-auto max-h-[650px] max-sm:w-full bg-dark-2 rounded-3xl border border-dark-4 p-5 lg:p-4 mt-4 text-gray-900">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <h2 className="text-white font-semibold text-lg">Notifications</h2>
@@ -48,7 +55,7 @@ const NotificationPage = () => {
             {/* Notifications List */}
             {!isLoading && notificationData?.notifications.length > 0 && (
                 <div className="space-y-4 mt-4">
-                    {notificationData?.notifications.map((notification:any) => (
+                    {notificationData?.notifications.map((notification:Notification) => (
                         <div
                             key={notification._id}
                             className="flex items-center bg-dark-4 shadow-sm p-4 rounded-lg hover:shadow-md transition"
@@ -98,6 +105,12 @@ const NotificationPage = () => {
                     ))}
                 </div>
             )}
+
+              {notificationData?.notifications.length === 0 && (
+                        <div className="text-center text-gray-500 font-medium py-4">
+                            No notifications to display 🤔
+                        </div>
+                    )}
         </div>
     );
 };

@@ -6,11 +6,23 @@ import Profile from '../../../../../../../public/assets/profilepic.svg';
 import Image from 'next/image';
 import cloudinaryLoader from '@/app/lib/cloudinary';
 
+
+
+interface Comment {
+  _id: string;
+  text: string;
+  user: {
+    _id: string;
+    fullname: string;
+    profileImg: string;
+  };
+}
+
 interface CommentProps {
   postId: string;
   post: {
-      comments: string[],
-    caption:string,
+  comments: Comment[],
+  caption:string,
   fullname:string,
   _id:string,
   user: {
@@ -20,6 +32,7 @@ interface CommentProps {
   }
   }
 }
+
 
 const CommentComponent = ({ postId, post  }: CommentProps) => {
   const { mutate: Comment, isError, isPending, error } = useComment();
@@ -71,7 +84,7 @@ const CommentComponent = ({ postId, post  }: CommentProps) => {
       </Formik>
 
       <div>
-        {post.comments.map((comment: any) => (
+        {post.comments.map((comment: Comment) => (
           <div key={comment._id} className="flex items-center mt-4">
             <div className="mr-2">
               <Image

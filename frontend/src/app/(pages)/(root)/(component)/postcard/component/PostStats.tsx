@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
 import Image from 'next/image';
-import { FaRegHeart, FaComment } from 'react-icons/fa';
+import { FaComment } from 'react-icons/fa';
 import Like from '../../../../../../../public/assets/icons/like.svg';
 import Liked from '../../../../../../../public/assets/icons/liked.svg';
 import Save from '../../../../../../../public/assets/icons/save.svg';
-import { getAuthUser, useLikePost } from '@/app/lib/query';
+import {  useLikePost } from '@/app/lib/query';
 
 interface PostStatsProps {
   postId: string;

@@ -1,25 +1,38 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import * as Yup from "yup";
 import { postSchema } from "@/app/lib/validation";
 import { useCreatePost } from "@/app/lib/query";
 import Loader from "../loader/page";
-import { useState } from "react";
 import FileUploader from "./Fileuploader/FileUploader";
+import { useRouter } from "next/navigation";
 
 interface PostFormProps {
   post?: {
     caption?: string;
     tags?: string;
+    img?: string;
   };
   action: "Create" | "Update";
 }
 
 const PostForm = ({ post, action }: PostFormProps) => {
-  const [file, setFile] = useState(null);
-
+  const router = useRouter();
   const { mutate: CreatePost, isPending, error, isError } = useCreatePost();
+  
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [formValues, setFormValues] = useState({
+    caption: post?.caption || "",
+    tags: post?.tags || "",
+    img: post?.img || "",
+  });
+
+  useEffect(() => {
+    if (selectedImage) {
+      setFormValues((prev) => ({ ...prev, img: selectedImage }));
+    }
+  }, [selectedImage]);
 
   if (isError) {
     console.log("Error", error.message);
@@ -29,15 +42,14 @@ const PostForm = ({ post, action }: PostFormProps) => {
 
   return (
     <Formik
-      initialValues={{
-        caption: post?.caption || "",  // Ensure text field is populated
-        tags: post?.tags || "",  // Ensure tags field is populated
-      }}
+      initialValues={formValues}
       validationSchema={postSchema}
+      enableReinitialize
       onSubmit={(values, { setSubmitting, resetForm }) => {
-        console.log("Form Submitted:", values);
-        CreatePost(values, {
+        console.log("Form Submitted:", { ...values });
+        CreatePost({ ...values }, {
           onSuccess: () => {
+            router.push("/");
             resetForm();
           },
         });
@@ -46,7 +58,6 @@ const PostForm = ({ post, action }: PostFormProps) => {
     >
       {({ isSubmitting }) => (
         <Form className="flex flex-col gap-9 w-full h-[500px]">
-          {/* Text Field */}
           <div className="flex flex-col">
             <label className="shad-form_label">Caption</label>
             <Field
@@ -58,7 +69,6 @@ const PostForm = ({ post, action }: PostFormProps) => {
             <ErrorMessage name="caption" component="div" className="text-red text-sm mt-2" />
           </div>
 
-          {/* Tags Field */}
           <div className="flex flex-col">
             <label className="shad-form_label">Tags</label>
             <Field
@@ -70,7 +80,8 @@ const PostForm = ({ post, action }: PostFormProps) => {
             <ErrorMessage name="tags" component="div" className="text-red border border-red-5 text-sm mt-2" />
           </div>
 
-          <FileUploader />
+          {/* File Uploader */}
+          <FileUploader selectedImage={selectedImage} setSelectedImage={setSelectedImage} />
 
           {/* Buttons */}
           <div className="flex justify-end items-center gap-4">

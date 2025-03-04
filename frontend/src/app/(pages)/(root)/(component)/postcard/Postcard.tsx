@@ -1,31 +1,34 @@
  'use client'
- import React, { useState } from 'react';
-
-import Profile from '../../../../../../public/assets/profilepic.svg';
+import Profile from '../../../../../../public/assets/defaultpostBackgrounf.jpeg';
 import Edit from '../../../../../../public/assets/icons/edit.svg';
-import snap from '../../../../../../public/assets/snap_gram.webp';
-// import PostStats from './PostStats';
-import { POSTS } from '@/app/constants/dummy';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useQuery } from '@tanstack/react-query';
-import {  getAllPost, getAuthUser, useDeletePost } from '@/app/lib/query';
+import {  GetAllPost, GetAuthUser, useDeletePost } from '@/app/lib/query';
 import Loader from '../loader/page';
 import Delete from '../../../../../../public/assets/icons/delete.svg'
 import PostStats from './component/PostStats';
 import Comment from './component/comment'
 import { getRelativeTime } from '@/app/lib/date';
 import cloudinaryLoader from '@/app/lib/cloudinary'
-import EditPostProfile from '../../(pages)/profile/editpostprofile/[id]/page';
 import { IoSadOutline } from 'react-icons/io5';
+
+interface Commentt {
+  _id: string;
+  text: string;
+  user: {
+    _id: string;
+    fullname: string;
+    profileImg: string;
+  };
+}
 
 interface PostCardProps {
   caption:string,
   fullname:string,
   likes: number[],
-  comments: string[],
+ comments: Commentt[],
   allcomments: number[],
-  image:string,
+  img:string,
   tags: string[],
   _id:string,
   createdAt: string,
@@ -41,8 +44,8 @@ interface PostCardProps {
 
 
 const PostCard = ({ type, isComment, setIsComment }: { type: string, isComment?: boolean, setIsComment: React.Dispatch<React.SetStateAction<boolean>> }) => {
-  const {data:posts, isError, error, isLoading} = getAllPost(type)
-  const {data:authUser, isLoading:isloadingAuth, isError:isErrorauth, error:errorauth} = getAuthUser()
+  const {data:posts, isError, error, isLoading} = GetAllPost(type)
+  const {data:authUser, isLoading:isloadingAuth, isError:isErrorauth, error:errorauth} = GetAuthUser()
   const { mutate: deletePosts, isPending: isDeleting } = useDeletePost();
   console.log('hr', posts);
   console.log('hg', isComment);
@@ -184,7 +187,7 @@ const PostCard = ({ type, isComment, setIsComment }: { type: string, isComment?:
 
         
     
-            <Image src={snap} alt="post" className="post-card_img mb-4" width={100} height={100}/>
+            <Image loader={cloudinaryLoader} src={post?.img || Profile} alt="post" className="post-card_img mb-4" width={100} height={100}/>
           </Link>
           <PostStats postId={post._id} postLike={post?.likes?.length} isLiked={isLiked} allcomment={post?.comments?.length}  setIsComment={setIsComment} />
           {isComment ? (

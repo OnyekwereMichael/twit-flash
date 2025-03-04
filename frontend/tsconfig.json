@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/(pages)/(root)/(pages)/chat/chatContainer/messageInput/page.jsx", "src/app/(pages)/(root)/(pages)/chat/chatContainer/chatHeader/page.jsx", "src/app/(pages)/(root)/(pages)/chat/chatContainer/messageContainer/page.jsx"],
   "exclude": ["node_modules"]
 }

@@ -1,8 +1,7 @@
 'use client'
-import { useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { updateSchema } from "@/app/lib/validation";
-import { getAuthUser, useUpdateProfile } from "@/app/lib/query";
+import { GetAuthUser, useUpdateProfile } from "@/app/lib/query";
 import toast from "react-hot-toast";
 import { useRouter } from 'next/navigation'; 
 
@@ -10,10 +9,10 @@ import { useRouter } from 'next/navigation';
 const EditProfileModal = () => {
 const router = useRouter()
 
-  const {data:authUser} = getAuthUser()
+  const {data:authUser} = GetAuthUser()
   console.log('the auth', authUser);
 
-  const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile() 
+  const {mutate: updateProfile} = useUpdateProfile() 
 
 
 	return (

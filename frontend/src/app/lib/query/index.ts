@@ -4,9 +4,53 @@ import { IloginUser, INewPost, INewUser, IUpdateUser } from "../../types";
 import toast from "react-hot-toast";
 import { QUERY_KEYS } from "../enum/index";
 import { useParams } from "next/navigation";
+import { io, Socket } from "socket.io-client";
+import { useRouter } from "next/navigation";
 
 
-export const createUserAccount = () => {
+const BASE_URL = "http://localhost:5000";
+let socket: Socket | null = null;
+
+export const connectUser = (userId: string) => {
+    if (!socket) {
+        socket = io(BASE_URL, {
+            query: { userId },
+        });
+
+        socket.on("connect", () => {
+            console.log("Socket connected for user:", userId);
+            socket?.emit("userConnected", { userId });
+        });
+
+        socket.on("disconnect", () => {
+            console.log("Socket disconnected");
+        });
+    }
+};
+
+export const disconnectUser = () => {
+    if (socket) {
+        socket.disconnect();
+        socket = null;
+        console.log("Socket manually disconnected");
+    }
+};
+
+
+  export const useOnlineUsers = () => {
+    return useQuery({
+        queryKey: ["online-users"],
+        queryFn: async () => {
+            const res = await fetch("http://localhost:5000/online-users");
+            const data = await res.json();
+            return data.onlineUsers;
+        },
+        refetchInterval: 5000, 
+    });
+};
+
+export const CreateUserAccount = () => {
+    const router = useRouter();
     return useMutation({
         mutationFn: async ({ email, username, fullname, password }: INewUser) => {
             try {
@@ -19,15 +63,20 @@ export const createUserAccount = () => {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
-
-
                 if (data.error) throw new Error(data.error);
-
                 toast.success('Account created successfully!');
+                router.push('/signin');
+                // Connect user to socket after signup
+                if (data._id) connectUser(data._id)
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to create user');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to create user');
+                } else {
+                    toast.error('Failed to create user');
+                }
                 throw error;
             }
         }
@@ -35,7 +84,8 @@ export const createUserAccount = () => {
 };
 
 
-export const signInAccount = () => {
+export const SignInAccount = () => {
+    const router = useRouter();
     return useMutation({
         mutationFn: async ({ username, password }: IloginUser) => {
             try {
@@ -48,10 +98,18 @@ export const signInAccount = () => {
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
                 toast.success('Logged in successfully!');
+                 router.push('/');
+                // Connect user to socket after login
+                if (data._id) connectUser(data._id)
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to login');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to Login');
+                } else {
+                    toast.error('Failed to create user');
+                }
                 throw error;
             }
         }
@@ -69,17 +127,24 @@ export const useLogout = () => {
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
                 toast.success('Logged out successfully!');
+                disconnectUser();
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to logout');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to Logout');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         }
     })
 }
 
-export const getAuthUser = () => {
+export const GetAuthUser = () => {
     return useQuery({
         queryKey: [QUERY_KEYS.GET_CURRENT_USER],
         queryFn: async () => {
@@ -89,10 +154,17 @@ export const getAuthUser = () => {
                 if (data.error) return null;
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
+                if (data?._id) connectUser(data._id);
                 return data;
-            } catch (error: any) {
+            }catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to get user');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to get user');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
 
@@ -104,7 +176,7 @@ export const getAuthUser = () => {
 }
 
 
-export const getAllPost = (type: string) => {
+export const GetAllPost = (type: string) => {
     const { username, id } = useParams();
     return useQuery({
         queryKey: [QUERY_KEYS.GET_POSTS, type, username, id], // Include type to differentiate queries
@@ -130,9 +202,15 @@ export const getAllPost = (type: string) => {
                 if (!res.ok) throw new Error(data.error || "Failed to fetch posts");
 
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || "Failed to get posts");
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to get post');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -155,9 +233,15 @@ export const useDeletePost = () => {
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to delete post');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to delete post');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -172,21 +256,27 @@ export const useDeletePost = () => {
 export const useCreatePost = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ tags, caption }: INewPost) => {
+        mutationFn: async ({ tags, caption, img }: INewPost) => {
             try {
                 const res = await fetch('/api/post/create', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tags, caption }),
+                    body: JSON.stringify({ tags, caption, img }),
                 });
                 const data = await res.json();
                 if (data.error) return null;
                 if (!res.ok) throw new Error(data.error);
                 console.log("pOST DATA  ", data);
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to create post');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to create post');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -210,9 +300,15 @@ export const useGetSuggestedUser = () => {
                 console.log('This is the data', data);
                 return data;
 
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to get suggested users');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to get suggested user');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -233,9 +329,15 @@ export const useFollowUser = () => {
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to Follow user');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to follow user');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -260,9 +362,15 @@ export const useLikePost = () => {
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to Like Post');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to Like post');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -288,9 +396,15 @@ export const useComment = () => {
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to add comment');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to add comment');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -313,9 +427,15 @@ export const useGetNotification = () => {
                 if (!res.ok) throw new Error(data.error);
                 console.log('This is the data', data);
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to get notifications');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to get notification');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -335,9 +455,15 @@ export const useDeleteAllNotification = () => {
                 if (!res.ok) throw new Error(data.error);
                 console.log(data);
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to delete all notifications');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to delete all notification');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -361,9 +487,15 @@ export const useGetProfile = () => {
                 if (!res.ok) throw new Error(data.error);
 
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || "Failed to get Profile");
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to get profile');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -393,9 +525,15 @@ export const useUpdateProfileImg = () => {
 
                 const data = await res.json();
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to Update Details');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to update details');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -428,9 +566,15 @@ export const useUpdateProfile = () => {
 
                 const data = await res.json();
                 return data;
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to Update Details');
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to update details');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -445,7 +589,7 @@ export const useUpdateProfile = () => {
 export const useUpdatePost = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: async ({ postId, caption, tags, img }: { postId: any, caption: string, tags: string, img?: string }) => {
+        mutationFn: async ({ postId, caption, tags, img }: { postId: string, caption: string, tags: string, img?: string }) => {
             try {
                 if (!caption && !tags && !img) {
                     throw new Error("At least one field is required to update your post.");
@@ -463,9 +607,14 @@ export const useUpdatePost = () => {
                 }
 
                 return await res.json();
-            } catch (error: any) {
+            } catch (error: unknown) {
                 console.error(error);
-                toast.error(error.message || 'Failed to update post');
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to update post');
+                } else {
+                    toast.error('Failed to create user');
+                }
+            
                 throw error;
             }
         },
@@ -476,4 +625,131 @@ export const useUpdatePost = () => {
     });
 };
 
+export const useGetAllUsers = () => {
+    return useQuery({
+        queryKey: [QUERY_KEYS.GET_ALLUSERS],
+        queryFn: async () => {
+            try {
+                const res = await fetch('/api/user/allusers');
+                const data = await res.json();
+                if (data.error) return null;
+                if (!res.ok) throw new Error(data.error);
+                console.log(data);
+                return data;
+            }catch (error: unknown) {
+                console.error(error);
+            
+                if (error instanceof Error) {
+                    toast.error(error.message || 'Failed to get user');
+                } else {
+                    toast.error('Failed to create user');
+                }
+                throw error;
+            }
+        },
+        retry: false,
+    })
+}
 
+// export const useGetMessages = (mid: string) => {
+//     return useQuery({
+//       queryKey: [QUERY_KEYS.GET_MESSAGES, mid], // Ensure uniqueness per user
+//       queryFn: async () => {
+//         if (!mid) return null; // Prevent unnecessary requests
+  
+//         try {
+//           const res = await fetch(`/api/message/${mid}`);
+//           const data = await res.json();
+//           if (!res.ok) throw new Error(data.error || "Failed to fetch messages");
+//           return data;
+//         } catch (error: unknown) {
+//           console.error(error);
+//           toast.error(error instanceof Error ? error.message : "Failed to get messages");
+//           throw error;
+//         }
+//       },
+//       enabled: !!mid, // Only run query if mid exists
+//       retry: false,
+
+      
+//     });
+//   };
+
+export const useGetMessages = (mid: string) => {
+    const queryClient = useQueryClient();
+  
+    const query = useQuery({
+      queryKey: [QUERY_KEYS.GET_MESSAGES, mid], // Ensure uniqueness per user
+      queryFn: async () => {
+        if (!mid) return null; // Prevent unnecessary requests
+  
+        try {
+          const res = await fetch(`/api/message/${mid}`);
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to fetch messages");
+          return data;
+        } catch (error: unknown) {
+          console.error(error);
+          toast.error(error instanceof Error ? error.message : "Failed to get messages");
+          throw error;
+        }
+      },
+      enabled: !!mid, // Only run query if mid exists
+      retry: true,
+    });
+
+
+  
+    // Ensure the socket listener is set up only once
+//     ✅ Prevents duplicate event listeners (hasListeners)
+// ✅ Listens for new messages (socket.on("NewMessage"))
+
+    if (!socket?.hasListeners("NewMessage")) {
+      socket?.on("NewMessage", (newMessage:string) => {
+        queryClient.setQueryData([QUERY_KEYS.GET_MESSAGES, mid], (oldMessages: string) => {
+          return oldMessages ? [...oldMessages, newMessage] : [newMessage];
+        });
+    });
+}
+
+
+    return query;
+  };
+
+  export const useCreateMessage = () => {
+    const queryClient = useQueryClient();
+  
+    return useMutation({
+      mutationFn: async ({ text, image, rid }: { text: string; image: string; rid: string }) => {
+        try {
+          const res = await fetch(`/api/message/send/${rid}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text, image }),
+          });
+  
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error);
+  
+          // Emit message in real-time
+        //   Sends the message to the WebSocket server for real-time updates.
+          socket?.emit("NewMessage", data);
+  
+          return data;
+        } catch (error: unknown) {
+          console.error(error);
+          toast.error(error instanceof Error ? error.message : "Failed to send message");
+          throw error;
+        }
+      },
+      onSuccess: (data, variables) => {
+        // Update the local cache to show the new message
+        queryClient.setQueryData([QUERY_KEYS.GET_MESSAGES, variables.rid], (oldMessages: string) => {
+          return oldMessages ? [...oldMessages, data] : [data];
+        });
+  
+        // Ensure the UI updates with the new message
+        queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_MESSAGES, variables.rid] });
+      },
+    });
+  };
